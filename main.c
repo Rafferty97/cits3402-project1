@@ -28,30 +28,28 @@ int get_edge_ind(int size, int side, int n) {
 void find_clusters(bool *grid, int sz, int *edges)
 {
   int *grid_c = calloc(sz * sz, sizeof(int));
-  int *stack = malloc(sz * sz * sizeof(int));
+  int *stack = malloc((100 + sz * sz) * sizeof(int));
   int cluster = 1;
   for (int side=0; side<4; side++) {
     for (int n=0; n<sz; n++) {
       int start_point = get_edge_ind(sz, side, n);
-      if (grid_c[start_point] != 0) continue;
+      if (!grid[start_point] || grid_c[start_point] != 0) continue;
       int ss = 1;
       stack[0] = start_point;
       while (ss > 0) {
         ss--;
         int curr = stack[ss];
-        if (grid_c[curr] != 0) continue;
-        if (!grid[curr]) continue;
         grid_c[curr] = cluster;
-        if (curr >= sz && grid[curr - sz]) {
+        if (curr >= sz && grid[curr - sz] && grid_c[curr - sz] == 0) {
           stack[ss++] = curr - sz;
         }
-        if (curr < sz * (sz - 1) && grid[curr + sz]) {
+        if (curr < sz * (sz - 1) && grid[curr + sz] && grid_c[curr + sz] == 0) {
           stack[ss++] = curr + sz;
         }
-        if (curr % sz > 0 && grid[curr - 1]) {
+        if (curr % sz > 0 && grid[curr - 1] && grid_c[curr - 1] == 0) {
           stack[ss++] = curr - 1;
         }
-        if (curr % sz < sz - 1 && grid[curr + 1]) {
+        if (curr % sz < sz - 1 && grid[curr + 1] && grid_c[curr + 1] == 0) {
           stack[ss++] = curr + 1;
         }
       }

@@ -121,13 +121,13 @@ cluster_info create_cluster_info(grid *grids, int num_grids)
   for (int i = 0; i < num_grids; i++) {
     if (grids[i].max_cluster > max) max = grids[i].max_cluster;
   }
-  c.cluster_size = calloc(max, sizeof(int));
+  /*c.cluster_size = calloc(max, sizeof(int));
   for (int i = 0; i < num_grids; i++) {
     int k = 0;
     for (int j = grids[i].c_c; j <= grids[i].max_cluster; j += grids[i].c_n) {
       c.cluster_size[j - 1] = grids[i].cluster_size[k++];
     }
-  }
+  }*/
   c.cluster_alias = calloc(max, sizeof(int));
   c.max_cluster = max;
   return c;
@@ -153,8 +153,8 @@ void merge_grids(grid *g1, grid *g2, cluster_info *clusters)
       c1 = t;
     }
     alias[c2 - 1] = c1;
-    sizes[c1 - 1] += sizes[c2 - 1];
-    sizes[c2 - 1] = 0;
+    //sizes[c1 - 1] += sizes[c2 - 1];
+    //sizes[c2 - 1] = 0;
   }
 }
 
@@ -236,7 +236,7 @@ void site_percolation(int size, float p, int threads, percolation_results *resul
   }
   // Calculate results
   results->percolates = grids_do_percolate(grids, threads, clusters);
-  results->largest_cluster = largest_cluster(clusters);
+  results->largest_cluster = 0; //largest_cluster(clusters);
   // Free grid memory
   for (int i = 0; i < threads; i++) free_grid(grids[i]);
   // Stop timing

@@ -218,21 +218,21 @@ void site_percolation(int size, float p, int threads, percolation_results *resul
   omp_set_num_threads(threads);
   #pragma omp parallel
   {
-    struct timeval t;
+    //struct timeval t;
     int i = omp_get_thread_num();
     int hei = (i == threads - 1 ? size - (i * subgrid_h) : subgrid_h);
     grid g = create_grid(size, hei, i + 1, threads);
-    gettimeofday(&t, NULL);
-    float delta = ((t.tv_sec  - start.tv_sec) * 1000000u + t.tv_usec - start.tv_usec) / 1.e6;
-    printf("Thread %i created grid at %f\n", i, delta);
+    //gettimeofday(&t, NULL);
+    //float delta = ((t.tv_sec  - start.tv_sec) * 1000000u + t.tv_usec - start.tv_usec) / 1.e6;
+    //printf("Thread %i created grid at %f\n", i, delta);
     seed_grid(g, p, time(NULL) + (i * 1961));
-    gettimeofday(&t, NULL);
-    delta = ((t.tv_sec  - start.tv_sec) * 1000000u + t.tv_usec - start.tv_usec) / 1.e6;
-    printf("Thread %i seeded grid at %f\n", i, delta);
+    //gettimeofday(&t, NULL);
+    //delta = ((t.tv_sec  - start.tv_sec) * 1000000u + t.tv_usec - start.tv_usec) / 1.e6;
+    //printf("Thread %i seeded grid at %f\n", i, delta);
     grid_do_dfs(&g);
-    gettimeofday(&t, NULL);
-    delta = ((t.tv_sec  - start.tv_sec) * 1000000u + t.tv_usec - start.tv_usec) / 1.e6;
-    printf("Thread %i finished DFS at %f\n", i, delta);
+    //gettimeofday(&t, NULL);
+    //delta = ((t.tv_sec  - start.tv_sec) * 1000000u + t.tv_usec - start.tv_usec) / 1.e6;
+    //printf("Thread %i finished DFS at %f\n", i, delta);
     grids[i] = g;
 
   }

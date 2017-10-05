@@ -128,8 +128,7 @@ cluster_info create_cluster_info(grid *grids, int num_grids)
       c.cluster_size[j - 1] = grids[i].cluster_size[k++];
     }
   }
-  c.cluster_alias = malloc(max * sizeof(int));
-  for (int i = 0; i < max; i++) c.cluster_alias[i] = i + 1;
+  c.cluster_alias = calloc(max, sizeof(int));
   c.max_cluster = max;
   return c;
 }
@@ -138,22 +137,22 @@ void merge_grids(grid *g1, grid *g2, cluster_info *clusters)
 {
   int *sizes = clusters->cluster_size;
   int *alias = clusters->cluster_alias;
-  int max = clusters->max_cluster;
   int sx = g1->sx;
   for (int x = 0; x < sx; x++) {
     int ind = ((g1->sy - 1) * sx) + x;
     int ind2 = x;
     if (!g1->site[ind] || !g2->site[ind2]) continue;
-    int c1 = alias[g1->cluster[ind] - 1], c2 = alias[g2->cluster[ind2] - 1];
+    int c1 = g1->cluster[ind];
+    int c2 = g2->cluster[ind2];
+    while (alias[c1 - 1] != 0) c1 = alias[c1 - 1];
+    while (alias[c2 - 1] != 0) c2 = alias[c2 - 1];
     if (c1 == c2) continue;
     if (c1 > c2) {
       int t = c2;
       c2 = c1;
       c1 = t;
     }
-    for (int i = c2 - 1; i < max; i++) {
-      if (alias[i] == c2) alias[i] = c1;
-    }
+    alias[c2 - 1] = c1;
     sizes[c1 - 1] += sizes[c2 - 1];
     sizes[c2 - 1] = 0;
   }
@@ -169,9 +168,11 @@ bool grids_do_percolate(grid *grids, int num_grids, cluster_info c)
     int f_ind = x;
     int l_ind = ((last_g->sy - 1) * sx) + x;
     if (!first_g->site[f_ind] || !last_g->site[l_ind]) continue;
-    if (alias[first_g->cluster[f_ind] - 1] == alias[last_g->cluster[l_ind] - 1]) {
-      return true;
-    }
+    int c1 = first_g->cluster[f_ind];
+    int c2 = last_g->cluster[l_ind];
+    while (alias[c1 - 1] != 0) c1 = alias[c1 - 1];
+    while (alias[c2 - 1] != 0) c2 = alias[c2 - 1];
+    if (c1 == c2) return true;
   }
   for (int i = 0; i < num_grids; i++) {
     grid *g = &grids[i];
@@ -179,9 +180,11 @@ bool grids_do_percolate(grid *grids, int num_grids, cluster_info c)
       int ind = y * sx;
       int ind2 = ((y + 1) * sx) - 1;
       if (!g->site[ind] || !g->site[ind2]) continue;
-      if (alias[g->cluster[ind] - 1] == alias[g->cluster[ind2] - 1]) {
-        return true;
-      }
+      int c1 = g->cluster[ind];
+      int c2 = g->cluster[ind2];
+      while (alias[c1 - 1] != 0) c1 = alias[c1 - 1];
+      while (alias[c2 - 1] != 0) c2 = alias[c2 - 1];
+      if (c1 == c2) return true;
     }
   }
   return false;

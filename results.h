@@ -8,6 +8,7 @@ typedef struct {
   bool percolates;
   int largest_cluster;
   float time_taken;
+  float dfs_time;
 } percolation_results;
 
 typedef struct {

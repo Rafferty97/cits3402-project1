@@ -135,7 +135,7 @@ cluster_info create_cluster_info(grid *grids, int num_grids)
 
 void merge_grids(grid *g1, grid *g2, cluster_info *clusters)
 {
-  int *sizes = clusters->cluster_size;
+  // int *sizes = clusters->cluster_size;
   int *alias = clusters->cluster_alias;
   int sx = g1->sx;
   for (int x = 0; x < sx; x++) {
@@ -209,7 +209,7 @@ void free_grid(grid g)
 void site_percolation(int size, float p, int threads, percolation_results *results)
 {
   // Start timing
-  struct timeval start, end;
+  struct timeval start, mid, end;
   gettimeofday(&start, NULL);
   // Simulation parameters
   results->type = PERCOLATION_TYPE;
@@ -228,6 +228,7 @@ void site_percolation(int size, float p, int threads, percolation_results *resul
     seed_grid(grids[i], p);
     grid_do_dfs(&grids[i]);
   }
+  gettimeofday(&mid, NULL);
   // Merge cluster stats
   cluster_info clusters = create_cluster_info(grids, threads);
   // Merge clusters
@@ -241,6 +242,8 @@ void site_percolation(int size, float p, int threads, percolation_results *resul
   for (int i = 0; i < threads; i++) free_grid(grids[i]);
   // Stop timing
   gettimeofday(&end, NULL);
-  float delta = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
-  results->time_taken = delta;
+  float delta1 = ((mid.tv_sec  - start.tv_sec) * 1000000u + mid.tv_usec - start.tv_usec) / 1.e6;
+  results->dfs_time = delta1;
+  float delta2 = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
+  results->time_taken = delta2;
 }

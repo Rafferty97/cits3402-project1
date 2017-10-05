@@ -1,12 +1,12 @@
 percolate: main.o site2.o results.o
-	gcc -std=c99 -fopenmp -Wall -pedantic -Werror -o percolate \
+	gcc -std=gnu99 -fopenmp -Wall -pedantic -Werror -o percolate \
 	main.o site2.o results.o -lm -g
 	
 main.o: main.c
-	gcc -std=c99 -fopenmp -Wall -pedantic -Werror -c main.c -g
+	gcc -std=gnu99 -fopenmp -Wall -pedantic -Werror -c main.c -g
 	
 results.o: results.c
-	gcc -std=c99 -fopenmp -Wall -pedantic -Werror -c results.c -g
+	gcc -std=gnu99 -fopenmp -Wall -pedantic -Werror -c results.c -g
 
 site2.o: site2.c
-	gcc -std=c99 -fopenmp -Wall -pedantic -Werror -c site2.c -g
+	gcc -std=gnu99 -fopenmp -Wall -pedantic -Werror -c site2.c -g

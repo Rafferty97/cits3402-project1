@@ -147,11 +147,6 @@ void merge_grids(grid *g1, grid *g2, cluster_info *clusters)
     while (alias[c1 - 1] != 0) c1 = alias[c1 - 1];
     while (alias[c2 - 1] != 0) c2 = alias[c2 - 1];
     if (c1 == c2) continue;
-    if (c1 > c2) {
-      int t = c2;
-      c2 = c1;
-      c1 = t;
-    }
     alias[c2 - 1] = c1;
     //sizes[c1 - 1] += sizes[c2 - 1];
     //sizes[c2 - 1] = 0;

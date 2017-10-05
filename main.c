@@ -6,16 +6,16 @@
 
 int main(int argc, char *argv[])
 {
-  int size = 4096;
-  int iter = 1;
+  int size = 1024;
+  int iter = 1000;
   float dfs = 0, time = 0;
   for (int i = 0; i < iter; i++) {
     percolation_results results;
     site_percolation(size, 0.6, atoi(argv[1]), &results);
     dfs += results.dfs_time;
     time += results.time_taken;
-    if ((i + 1) % 100 == 0) printf("%i iterations...\n", i + 1);
+    // if ((i + 1) % 10 == 0) printf("%i iterations...\n", i + 1);
   }
-  printf("%i x %i, %i iterations\n%i threads: %f seconds\n", size, size, iter, atoi(argv[1]), time);
-  printf("DFS time: %f seconds\n\n", dfs);
+  if (argc > 2) printf("Type\tSize\tIter's\tThreads\tTime\n");
+  printf("SITE\t%i\t%i\t%i\t%f\n", size, iter, atoi(argv[1]), time);
 }

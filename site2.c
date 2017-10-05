@@ -42,13 +42,13 @@ grid create_grid(int sx, int sy, int c_c, int c_n)
   return g;
 }
 
-void seed_grid(grid g, float p, unsigned long seed[3])
+void seed_grid(grid g, float p, unsigned long seed)
 {
   unsigned short xsubi[3];
-  xsubi[0] = 231241;
-  xsubi[1] = 321322;
-  xsubi[2] = 973524;
-  memcpy(xsubi, seed, sizeof(long));
+  xsubi[0] = 2312;
+  xsubi[1] = 3213;
+  xsubi[2] = 9735;
+  memcpy(xsubi, &seed, sizeof(long));
   for (int i = 0; i < g.sx * g.sy; i++) {
     g.site[i] = erand48(xsubi) < p;
   }

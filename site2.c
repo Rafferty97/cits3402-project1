@@ -26,6 +26,7 @@ typedef struct {
   int *cluster_size;   // The number of sites in each cluster (index 0 = cluster 1)
   int *cluster_alias;  // The smallest connected cluster ID (defines an equivalence relation)
   int max_cluster;     // The largest cluster ID (and length of the arrays)
+  int largest_cluster; // The size of the largest cluster
 } cluster_info;
 
 grid create_grid(int sx, int sy, int c_c, int c_n)
@@ -46,7 +47,7 @@ void seed_grid(grid g, float p, unsigned long seed)
 {
   unsigned int rand_buffer = seed;
   for (int i = 0; i < g.sx * g.sy; i++) {
-    g.site[i] = rand_r(&rand_buffer) < p;
+    g.site[i] = ((float)rand_r(&rand_buffer) / (float)RAND_MAX) < p;
   }
 }
 
@@ -122,13 +123,17 @@ cluster_info create_cluster_info(grid *grids, int num_grids)
   for (int i = 0; i < num_grids; i++) {
     if (grids[i].max_cluster > max) max = grids[i].max_cluster;
   }
-  /*c.cluster_size = calloc(max, sizeof(int));
-  for (int i = 0; i < num_grids; i++) {
-    int k = 0;
-    for (int j = grids[i].c_c; j <= grids[i].max_cluster; j += grids[i].c_n) {
-      c.cluster_size[j - 1] = grids[i].cluster_size[k++];
+  c.cluster_size = calloc(max, sizeof(int));
+  c.largest_cluster = 0;
+  for (int i = 0; i < max; i++) {
+    grid *grid = &grids[i % num_grids];
+    int j = i / num_grids;
+    if (j < grid->max_cluster) {
+      int sz = grid->cluster_size[j];
+      c.cluster_size[i] = sz;
+      if (sz > c.largest_cluster) c.largest_cluster = sz;
     }
-  }*/
+  }
   c.cluster_alias = calloc(max, sizeof(int));
   c.max_cluster = max;
   return c;
@@ -136,7 +141,7 @@ cluster_info create_cluster_info(grid *grids, int num_grids)
 
 void merge_grids(grid *g1, grid *g2, cluster_info *clusters)
 {
-  // int *sizes = clusters->cluster_size;
+  int *sizes = clusters->cluster_size;
   int *alias = clusters->cluster_alias;
   int sx = g1->sx;
   for (int x = 0; x < sx; x++) {
@@ -149,8 +154,11 @@ void merge_grids(grid *g1, grid *g2, cluster_info *clusters)
     while (alias[c2 - 1] != 0) c2 = alias[c2 - 1];
     if (c1 == c2) continue;
     alias[c2 - 1] = c1;
-    //sizes[c1 - 1] += sizes[c2 - 1];
-    //sizes[c2 - 1] = 0;
+    sizes[c1 - 1] += sizes[c2 - 1];
+    sizes[c2 - 1] = 0;
+    if (sizes[c1 - 1] > clusters->largest_cluster) {
+      clusters->largest_cluster = sizes[c1 - 1];
+    }
   }
 }
 
@@ -186,15 +194,6 @@ bool grids_do_percolate(grid *grids, int num_grids, cluster_info c)
   return false;
 }
 
-int largest_cluster(cluster_info c)
-{
-  int max = 0;
-  for (int i = 0; i < c.max_cluster; i++) {
-    if (c.cluster_size[i] > max) max = c.cluster_size[i];
-  }
-  return max;
-}
-
 void free_grid(grid g)
 {
   free(g.site);
@@ -202,7 +201,7 @@ void free_grid(grid g)
   free(g.cluster_size);
 }
 
-void site_percolation(int size, float p, int threads, percolation_results *results)
+void site_percolation(int size, float p, int threads, percolation_results *results, unsigned long seed)
 {
   // Start timing
   struct timeval start, mid, end;
@@ -225,7 +224,7 @@ void site_percolation(int size, float p, int threads, percolation_results *resul
     //gettimeofday(&t, NULL);
     //float delta = ((t.tv_sec  - start.tv_sec) * 1000000u + t.tv_usec - start.tv_usec) / 1.e6;
     //printf("Thread %i created grid at %f\n", i, delta);
-    seed_grid(g, p, time(NULL) + (i * 1961));
+    seed_grid(g, p, seed + (i * 1961));
     //gettimeofday(&t, NULL);
     //delta = ((t.tv_sec  - start.tv_sec) * 1000000u + t.tv_usec - start.tv_usec) / 1.e6;
     //printf("Thread %i seeded grid at %f\n", i, delta);
@@ -237,15 +236,36 @@ void site_percolation(int size, float p, int threads, percolation_results *resul
 
   }
   gettimeofday(&mid, NULL);
+  /* Print
+  for (int i=0; i<threads; i++) {
+    for (int y=0; y<grids[i].sy; y++) {
+      for (int x=0; x<grids[i].sx; x++) {
+        printf("%c ", grids[i].site[x + (grids[i].sx * y)] ? 'y' : 'n');
+      }
+      printf("\n");
+    }
+  }
+  for (int i=0; i<threads; i++) {
+    for (int y=0; y<grids[i].sy; y++) {
+      for (int x=0; x<grids[i].sx; x++) {
+        printf("%02d ", grids[i].cluster[x + (grids[i].sx * y)]);
+      }
+      printf("\n");
+    }
+  } */
   // Merge cluster stats
   cluster_info clusters = create_cluster_info(grids, threads);
+  /* Print
+  for (int i=0; i<clusters.max_cluster; i++) printf("%i ", clusters.cluster_size[i]);
+  printf("\n");
+  printf("%i\n", clusters.largest_cluster); */
   // Merge clusters
   for (int i = 0; i < threads - 1; i++) {
     merge_grids(&grids[i], &grids[i + 1], &clusters);
   }
   // Calculate results
   results->percolates = grids_do_percolate(grids, threads, clusters);
-  results->largest_cluster = 0; //largest_cluster(clusters);
+  results->largest_cluster = clusters.largest_cluster;
   // Free grid memory
   for (int i = 0; i < threads; i++) free_grid(grids[i]);
   // Stop timing

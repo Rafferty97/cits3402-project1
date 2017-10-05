@@ -227,7 +227,6 @@ void site_percolation(int size, float p, int threads, percolation_results *resul
   }
   // Merge cluster stats
   cluster_info clusters = create_cluster_info(grids, threads);
-  for (int i = 0; i < threads; i++) printf("%i clusters\n", grids[i].max_cluster);
   // Merge clusters
   for (int i = 0; i < threads - 1; i++) {
     merge_grids(&grids[i], &grids[i + 1], &clusters);

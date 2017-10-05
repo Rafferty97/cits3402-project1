@@ -42,10 +42,15 @@ grid create_grid(int sx, int sy, int c_c, int c_n)
   return g;
 }
 
-void seed_grid(grid g, float p)
+void seed_grid(grid g, float p, unsigned long seed[3])
 {
+  unsigned short xsubi[3];
+  xsubi[0] = 231241;
+  xsubi[1] = 321322;
+  xsubi[2] = 973524;
+  memcpy(xsubi, seed, sizeof(long));
   for (int i = 0; i < g.sx * g.sy; i++) {
-    g.site[i] = ((float)rand() / (float)RAND_MAX) < p;
+    g.site[i] = erand48(xsubi) < p;
   }
 }
 
@@ -217,12 +222,23 @@ void site_percolation(int size, float p, int threads, percolation_results *resul
   omp_set_num_threads(threads);
   #pragma omp parallel
   {
+    struct timeval t;
     int i = omp_get_thread_num();
     int hei = (i == threads - 1 ? size - (i * subgrid_h) : subgrid_h);
     grid g = create_grid(size, hei, i + 1, threads);
-    seed_grid(g, p);
+    gettimeofday(&t, NULL);
+    float delta = ((t.tv_sec  - start.tv_sec) * 1000000u + t.tv_usec - start.tv_usec) / 1.e6;
+    printf("Thread %i created grid at %f\n", i, delta);
+    seed_grid(g, p, time(NULL) + (i * 1961));
+    gettimeofday(&t, NULL);
+    delta = ((t.tv_sec  - start.tv_sec) * 1000000u + t.tv_usec - start.tv_usec) / 1.e6;
+    printf("Thread %i seeded grid at %f\n", i, delta);
     grid_do_dfs(&g);
+    gettimeofday(&t, NULL);
+    delta = ((t.tv_sec  - start.tv_sec) * 1000000u + t.tv_usec - start.tv_usec) / 1.e6;
+    printf("Thread %i finished DFS at %f\n", i, delta);
     grids[i] = g;
+
   }
   gettimeofday(&mid, NULL);
   // Merge cluster stats

@@ -13,5 +13,5 @@ int main(int argc, char *argv[])
     time += results.time_taken;
     if ((i - 1) % 100 == 0) printf("%i iterations...\n", i - 1);
   }
-  printf("256 x 256, 1000 iterations\n%i threads: %f seconds", atoi(argv[1]), time);
+  printf("256 x 256, 1000 iterations\n%i threads: %f seconds\n\n", atoi(argv[1]), time);
 }

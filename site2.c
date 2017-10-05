@@ -224,9 +224,10 @@ void site_percolation(int size, float p, int threads, percolation_results *resul
   {
     int i = omp_get_thread_num();
     int hei = (i == threads - 1 ? size - (i * subgrid_h) : subgrid_h);
-    grids[i] = create_grid(size, hei, i + 1, threads);
-    seed_grid(grids[i], p);
-    grid_do_dfs(&grids[i]);
+    grid g = create_grid(size, hei, i + 1, threads);
+    seed_grid(g, p);
+    grid_do_dfs(&g);
+    grids[i] = g;
   }
   gettimeofday(&mid, NULL);
   // Merge cluster stats

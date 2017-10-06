@@ -6,17 +6,17 @@
 #include <sys/time.h>
 #include <omp.h>
 
-#include "site.h"
+#include "bond.h"
 #include "clusters.h"
 
-#define PERCOLATION_TYPE "SITE"
+#define PERCOLATION_TYPE "BOND"
 
-typedef struct site_grid grid;
+typedef struct bond_grid grid;
 
 static grid create_grid(int sx, int sy, int c_c, int c_n)
 {
   grid g;
-  g.site = malloc(sx * sy * sizeof(bool));
+  g.bond = malloc(sx * sy * sizeof(short));
   g.cluster = calloc(sx * sy, sizeof(int));
   g.cluster_size = malloc(4 * sx * sizeof(int));
   g.cluster_cap = 4 * sx;
@@ -31,7 +31,14 @@ static void seed_grid(grid g, float p, unsigned long seed)
 {
   unsigned int rand_buffer = seed;
   for (int i = 0; i < g.sx * g.sy; i++) {
-    g.site[i] = ((float)rand_r(&rand_buffer) / (float)RAND_MAX) < p;
+    short j = 0;
+    if (((float)rand_r(&rand_buffer) / (float)RAND_MAX) < p) {
+      j += 1;
+    }
+    if (((float)rand_r(&rand_buffer) / (float)RAND_MAX) < p) {
+      j += 2;
+    }
+    g.bond[i] = j;
   }
 }
 
@@ -43,7 +50,7 @@ static void grid_do_dfs(grid *g)
   for (int x=0; x<g->sx; x++) {
     for (int y=0; y<g->sy; y++) {
       int ind = (y * g->sx) + x;
-      if (!g->site[ind] || g->cluster[ind] != 0) continue;
+      if (g->cluster[ind] != 0) continue;
       int sp = 0;
       g->cluster[ind] = cluster;
       stack[sp++] = x;
@@ -52,9 +59,10 @@ static void grid_do_dfs(grid *g)
       while (sp > 0) {
         int cy = stack[--sp];
         int cx = stack[--sp];
+        int node = (cy * g->sy) + cx;
         if (cx > 0) {
           int left = (cy * g->sx) + cx - 1;
-          if (g->site[left] && g->cluster[left] == 0) {
+          if ((g->bond[left] & 1) && g->cluster[left] == 0) {
             g->cluster[left] = cluster;
             clust_sz++;
             stack[sp++] = cx - 1;
@@ -63,7 +71,7 @@ static void grid_do_dfs(grid *g)
         }
         if (cx < g->sx - 1) {
           int right = (cy * g->sx) + cx + 1;
-          if (g->site[right] && g->cluster[right] == 0) {
+          if ((g->bond[node] & 1) && g->cluster[right] == 0) {
             g->cluster[right] = cluster;
             clust_sz++;
             stack[sp++] = cx + 1;
@@ -72,7 +80,7 @@ static void grid_do_dfs(grid *g)
         }
         if (cy > 0) {
           int top = ((cy - 1) * g->sx) + cx;
-          if (g->site[top] && g->cluster[top] == 0) {
+          if ((g->bond[top] & 2) && g->cluster[top] == 0) {
             g->cluster[top] = cluster;
             clust_sz++;
             stack[sp++] = cx;
@@ -81,7 +89,7 @@ static void grid_do_dfs(grid *g)
         }
         if (cy < g->sy - 1) {
           int bottom = ((cy + 1) * g->sx) + cx;
-          if (g->site[bottom] && g->cluster[bottom] == 0) {
+          if ((g->bond[node] & 2) && g->cluster[bottom] == 0) {
             g->cluster[bottom] = cluster;
             clust_sz++;
             stack[sp++] = cx;
@@ -112,7 +120,7 @@ static void merge_grids_horiz(grid *g1, grid *g2, cluster_info *ci, short oy)
   for (int x = 0; x < sx; x++) {
     int ind = last_row + x;
     int ind2 = x;
-    if (!g1->site[ind] || !g2->site[ind2]) continue;
+    if (!(g1->bond[ind] & 2)) continue;
     int c1 = g1->cluster[ind];
     int c2 = g2->cluster[ind2];
     merge_clusters(ci, c1, c2, 0, oy);
@@ -128,7 +136,7 @@ static void merge_grids_vert(grid *g1, grid *g2, cluster_info *ci, short ox)
   for (int y = 0; y < sy; y++) {
     int ind = last_col + (y * sx1);
     int ind2 = y * sx2;
-    if (!g1->site[ind] || !g2->site[ind2]) continue;
+    if (!(g1->bond[ind] & 1)) continue;
     int c1 = g1->cluster[ind];
     int c2 = g2->cluster[ind2];
     merge_clusters(ci, c1, c2, ox, 0);
@@ -137,12 +145,12 @@ static void merge_grids_vert(grid *g1, grid *g2, cluster_info *ci, short ox)
 
 static void free_grid(grid g)
 {
-  free(g.site);
+  free(g.bond);
   free(g.cluster);
   free(g.cluster_size);
 }
 
-void site_percolation(int size, float p, unsigned long seed, percolation_results *results)
+void bond_percolation(int size, float p, unsigned long seed, percolation_results *results)
 {
   // Start timing
   struct timeval start, end;
@@ -159,14 +167,18 @@ void site_percolation(int size, float p, unsigned long seed, percolation_results
   /* printf("\n");
   for (int y=0; y<size; y++) {
     for (int x=0; x<size; x++) {
-      printf("%s", g.site[x + (y * size)] ? "X" : " ");
+      printf(".%s", (g.bond[x + (y * size)] & 1) ? "-" : " ");
+    }
+    printf("\n");
+    for (int x=0; x<size; x++) {
+      printf("%s ", (g.bond[x + (y * size)] & 2) ? "|" : " ");
     }
     printf("\n");
   } */
   // Perform DFS
   grid_do_dfs(&g);
   // Merge clusters
-  cluster_info clusters = create_clusters_from_site_grids(&g, 1);
+  cluster_info clusters = create_clusters_from_bond_grids(&g, 1);
   merge_grids_horiz(&g, &g, &clusters, 1);
   merge_grids_vert(&g, &g, &clusters, 1);
   // Calculate results
@@ -181,7 +193,7 @@ void site_percolation(int size, float p, unsigned long seed, percolation_results
   results->time_taken = delta;
 }
 
-void site_percolation_parallel(int size, float p, unsigned long seed, percolation_results *results, int threads)
+void bond_percolation_parallel(int size, float p, unsigned long seed, percolation_results *results, int threads)
 {
   // Start timing
   struct timeval start, end;
@@ -205,7 +217,7 @@ void site_percolation_parallel(int size, float p, unsigned long seed, percolatio
     grids[i] = g;
   }
   // Merge clusters
-  cluster_info clusters = create_clusters_from_site_grids(grids, threads);
+  cluster_info clusters = create_clusters_from_bond_grids(grids, threads);
   for (int i = 1; i < threads; i++) {
     merge_grids_horiz(&grids[i - 1], &grids[i], &clusters, 0);
     merge_grids_vert(&grids[i], &grids[i], &clusters, 1);

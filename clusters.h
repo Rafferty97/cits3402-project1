@@ -18,11 +18,8 @@ struct cluster {
 };
 
 typedef struct {
-  cluster **slots;       // The slots in the hash table
+  cluster *slots;       // The slots in the hash table
   int slots_num;         // The numbers of slots in the hash table
-  cluster *cluster_pool; // Cluster pool
-  int cluster_cap;       // Capacity of the cluster pool
-  int cluster_num;       // Clusters in the cluster pool
   int largest_cluster;   // The size of the largest cluster
   int **cluster_sizes;   // An array of cluster_size arrays, for each subgrid
   int num_grids;         // The number of subgrids

@@ -1,7 +1,10 @@
+#ifndef __BOND_H__
+#define __BOND_H__
+
 #include "results.h"
 
 struct bond_grid {
-  short *site;         // 2D array specifying if a lattice point has a bond to right and down
+  short *bond;         // 2D array specifying if a lattice point has a bond to right and down
   int *cluster;        // 2D array specifying which cluster a site belongs to (0 if none or unknown)
   int *cluster_size;   // The number of sites in each cluster (index 0 = cluster 1)
   int cluster_cap;     // The current capacity of the cluster_size array
@@ -16,3 +19,5 @@ struct bond_grid {
 void bond_percolation(int size, float p, unsigned long seed, percolation_results *results);
 
 void bond_percolation_parallel(int size, float p, unsigned long seed, percolation_results *results, int threads);
+
+#endif

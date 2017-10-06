@@ -23,13 +23,11 @@ void random_percolation(char type, int size, float p, int iter, int threads, boo
       case 0:
       site_percolation(size, p, seed, &results); break;
       case 1:
-      //bond_percolation(size, p, seed, &results); break;
-      break;
+      bond_percolation(size, p, seed, &results); break;
       case 2:
       site_percolation_parallel(size, p, seed, &results, threads); break;
       case 3:
-      //bond_percolation_parallel(size, p, seed, &results, threads); break;
-      break;
+      bond_percolation_parallel(size, p, seed, &results, threads); break;
     }
     if (results.percolates) perc_count++;
     total_time += results.time_taken;
@@ -65,7 +63,10 @@ void random_percolation(char type, int size, float p, int iter, int threads, boo
 
 int main(int argc, char *argv[])
 {
-  for (int i=1; i<=12; i++) {
-    random_percolation('s', 1024, 0.592746, 250, i, false);
-  }
+  random_percolation('b', 1024, 0.5, 100, 1, false);
+  random_percolation('b', 1024, 0.5, 100, 2, false);
+  random_percolation('b', 1024, 0.5, 100, 4, false);
+  random_percolation('s', 1024, 0.5, 100, 1, false);
+  random_percolation('s', 1024, 0.5, 100, 2, false);
+  random_percolation('s', 1024, 0.5, 100, 4, false);
 }

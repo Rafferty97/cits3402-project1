@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
   random_percolation('b', 1024, 0.5, 100, 1, false);
   random_percolation('b', 1024, 0.5, 100, 2, false);
   random_percolation('b', 1024, 0.5, 100, 4, false);
-  random_percolation('s', 1024, 0.5, 100, 1, false);
-  random_percolation('s', 1024, 0.5, 100, 2, false);
-  random_percolation('s', 1024, 0.5, 100, 4, false);
+  random_percolation('s', 1024, 0.59, 100, 1, false);
+  random_percolation('s', 1024, 0.59, 100, 2, false);
+  random_percolation('s', 1024, 0.59, 100, 4, false);
 }

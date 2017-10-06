@@ -66,6 +66,6 @@ void random_percolation(char type, int size, float p, int iter, int threads, boo
 int main(int argc, char *argv[])
 {
   for (int i=1; i<=12; i++) {
-    random_percolation('s', 1024, 0.592746, 250, 1, false);
+    random_percolation('s', 1024, 0.592746, 250, i, false);
   }
 }

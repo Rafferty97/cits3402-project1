@@ -1,12 +1,12 @@
-percolate: main.o site2.o results.o
+percolate: main.o site.o clusters.o
 	gcc-7 -std=gnu99 -fopenmp -Wall -pedantic -Werror -o percolate \
-	main.o site2.o results.o -lm -g
+	main.o site.o clusters.o -lm -g
 	
 main.o: main.c
 	gcc-7 -std=gnu99 -fopenmp -Wall -pedantic -Werror -c main.c -g
-	
-results.o: results.c
-	gcc-7 -std=gnu99 -fopenmp -Wall -pedantic -Werror -c results.c -g
 
-site2.o: site2.c
-	gcc-7 -std=gnu99 -fopenmp -Wall -pedantic -Werror -c site2.c -g
+site.o: site.c
+	gcc-7 -std=gnu99 -fopenmp -Wall -pedantic -Werror -c site.c -g
+
+clusters.o: clusters.c
+	gcc-7 -std=gnu99 -fopenmp -Wall -pedantic -Werror -c clusters.c -g

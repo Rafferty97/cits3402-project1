@@ -1,27 +1,71 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <time.h>
 #include <omp.h>
 
+#include "results.h"
 #include "site.h"
+#include "bond.h"
+
+void random_percolation(char type, int size, float p, int iter, int threads, bool l)
+{
+  unsigned long seed = time(NULL);
+  percolation_results results;
+  char mode = 0;
+  if (tolower(type) == 'b') mode += 1;
+  if (threads > 1) mode += 2;
+  float total_time = 0, avg_largest_cluster = 0;
+  int perc_count = 0, n = 0;
+  if (l) printf("Percolating...");
+  for (int i=0; i<iter; i++) {
+    switch (mode) {
+      case 0:
+      site_percolation(size, p, seed, &results); break;
+      case 1:
+      //bond_percolation(size, p, seed, &results); break;
+      break;
+      case 2:
+      site_percolation_parallel(size, p, seed, &results, threads); break;
+      case 3:
+      //bond_percolation_parallel(size, p, seed, &results, threads); break;
+      break;
+    }
+    if (results.percolates) perc_count++;
+    total_time += results.time_taken;
+    avg_largest_cluster += results.largest_cluster;
+    if (l) {
+      n += size * size;
+      if (n < 5000) break;
+      n = 0;
+      printf("\33[2K\rPercolating... %i / %i iterations.", i + 1, iter);
+      fflush(stdout);
+    }
+    seed += 1923 * i;
+  }
+  if (l) printf("\n\n");
+  avg_largest_cluster /= iter;
+  if (l) {
+    printf(
+      "%s percolation, %i x %i grid, p = %f\n%i iterations, %i thread%s.\n\n",
+      (tolower(type) == 'b' ? "Bond" : "Site"), size, size, p, iter, threads,
+      (threads == 1 ? "" : "s")
+    );
+    printf(
+      "Total time: %f seconds\nPercolating grids: %i / %i\nAvg. largest cluster size: %f\n\n",
+      total_time, perc_count, iter, avg_largest_cluster
+    );
+  } else {
+    printf(
+      "%s\t%i\t%f\t%i\t%i\t%f\t%i\t%f\n", (tolower(type) == 'b' ? "bond" : "site"),
+      size, p, iter, threads, total_time, perc_count, avg_largest_cluster
+    );
+  }
+}
 
 int main(int argc, char *argv[])
 {
-  int size = 256;
-  int iter = 250;
-  int threads = 4;
-  float p = atof(argv[1]);
-  float dfs = 0, tt = 0;
-  int perc = 0;
-  for (int i = 0; i < iter; i++) {
-    percolation_results results;
-    site_percolation(size, p, threads, &results, time(NULL) + (i * 321));
-    dfs += results.dfs_time;
-    tt += results.time_taken;
-    if (results.percolates) perc++;
-    // if ((i + 1) % 10 == 0) printf("%i iterations...\n", i + 1);
-    // printf("%s\t%i\n", results.percolates ? "Yes" : "No", results.largest_cluster);
+  for (int i=1; i<=12; i++) {
+    random_percolation('s', 1024, 0.592746, 250, 1, false);
   }
-  if (argc > 2) printf("Type\tSize\tp\tIter's\tThreads\tPerc\tTime\n");
-  printf("SITE\t%i\t%f\t%i\t%i\t%i\t%f\n", size, p, iter, threads, perc * 4, tt);
 }

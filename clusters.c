@@ -25,6 +25,7 @@ cluster_info create_clusters_from_site_grids(struct site_grid *grids, int num_gr
   ci.percolates = false;
   ci.cluster_cap = 1024;
   ci.cluster_pool = malloc(ci.cluster_cap * sizeof(cluster));
+  ci.cluster_num = 0;
   return ci;
 }
 
@@ -78,4 +79,5 @@ void free_cluster_info(cluster_info *ci)
 {
   free(ci->slots);
   free(ci->cluster_pool);
+  free(ci->cluster_sizes);
 }

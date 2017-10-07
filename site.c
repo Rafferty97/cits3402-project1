@@ -39,12 +39,13 @@ static void seed_grid(grid g, float p, unsigned long seed)
 
 static void grid_do_dfs(grid *g)
 {
+  int gsx = g->sx, gsy = g->sy;
   int cluster = g->c_c, clusters = 0;
-  int *stack = malloc(2 * g->sx * g->sy * sizeof(int));
+  int *stack = malloc(2 * gsx * gsy * sizeof(int));
   int largest_cluster = 0;
-  for (int x=0; x<g->sx; x++) {
-    for (int y=0; y<g->sy; y++) {
-      int ind = (y * g->sx) + x;
+  for (int x=0; x<gsx; x++) {
+    for (int y=0; y<gsy; y++) {
+      int ind = (y * gsx) + x;
       if (!g->site[ind] || g->cluster[ind] != 0) continue;
       int sp = 0;
       g->cluster[ind] = cluster;
@@ -55,7 +56,7 @@ static void grid_do_dfs(grid *g)
         int cy = stack[--sp];
         int cx = stack[--sp];
         if (cx > 0) {
-          int left = (cy * g->sx) + cx - 1;
+          int left = (cy * gsx) + cx - 1;
           if (g->site[left] && g->cluster[left] == 0) {
             g->cluster[left] = cluster;
             clust_sz++;
@@ -63,8 +64,8 @@ static void grid_do_dfs(grid *g)
             stack[sp++] = cy;
           }
         }
-        if (cx < g->sx - 1) {
-          int right = (cy * g->sx) + cx + 1;
+        if (cx < gsx - 1) {
+          int right = (cy * gsx) + cx + 1;
           if (g->site[right] && g->cluster[right] == 0) {
             g->cluster[right] = cluster;
             clust_sz++;
@@ -73,7 +74,7 @@ static void grid_do_dfs(grid *g)
           }
         }
         if (cy > 0) {
-          int top = ((cy - 1) * g->sx) + cx;
+          int top = ((cy - 1) * gsx) + cx;
           if (g->site[top] && g->cluster[top] == 0) {
             g->cluster[top] = cluster;
             clust_sz++;
@@ -81,8 +82,8 @@ static void grid_do_dfs(grid *g)
             stack[sp++] = cy - 1;
           }
         }
-        if (cy < g->sy - 1) {
-          int bottom = ((cy + 1) * g->sx) + cx;
+        if (cy < gsy - 1) {
+          int bottom = ((cy + 1) * gsx) + cx;
           if (g->site[bottom] && g->cluster[bottom] == 0) {
             g->cluster[bottom] = cluster;
             clust_sz++;
@@ -92,7 +93,7 @@ static void grid_do_dfs(grid *g)
         }
       }
       if (clusters >= g->cluster_cap) {
-        g->cluster_cap += 4 * g->sx;
+        g->cluster_cap += 4 * gsx;
         g->cluster_size = realloc(g->cluster_size, g->cluster_cap * sizeof(int));
       }
       g->cluster_size[clusters++] = clust_sz;

@@ -107,7 +107,7 @@ void interactive_mode()
         exit(EXIT_FAILURE);
       }
       buffer = malloc(size * size);
-      char *c = token;
+      char *c = line;
       for (int i = 0; i < size * size; i++) {
         if (*c == '\0') break;
         buffer[i] = *c++ - '0';

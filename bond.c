@@ -46,12 +46,13 @@ static void seed_grid(grid g, float p, unsigned long seed)
 
 static void grid_do_dfs(grid *g)
 {
+  int gsx = g->sx, gsy = g->sy;
   int cluster = g->c_c, clusters = 0;
-  int *stack = malloc(2 * g->sx * g->sy * sizeof(int));
+  int *stack = malloc(2 * gsx * gsy * sizeof(int));
   int largest_cluster = 0;
-  for (int x=0; x<g->sx; x++) {
-    for (int y=0; y<g->sy; y++) {
-      int ind = (y * g->sx) + x;
+  for (int x=0; x<gsx; x++) {
+    for (int y=0; y<gsy; y++) {
+      int ind = (y * gsx) + x;
       if (g->cluster[ind] != 0) continue;
       int sp = 0;
       g->cluster[ind] = cluster;
@@ -61,9 +62,9 @@ static void grid_do_dfs(grid *g)
       while (sp > 0) {
         int cy = stack[--sp];
         int cx = stack[--sp];
-        int node = (cy * g->sy) + cx;
+        int node = (cy * gsx) + cx;
         if (cx > 0) {
-          int left = (cy * g->sx) + cx - 1;
+          int left = (cy * gsx) + cx - 1;
           if ((g->bond[left] & 1) && g->cluster[left] == 0) {
             g->cluster[left] = cluster;
             clust_sz++;
@@ -71,8 +72,8 @@ static void grid_do_dfs(grid *g)
             stack[sp++] = cy;
           }
         }
-        if (cx < g->sx - 1) {
-          int right = (cy * g->sx) + cx + 1;
+        if (cx < gsx - 1) {
+          int right = (cy * gsx) + cx + 1;
           if ((g->bond[node] & 1) && g->cluster[right] == 0) {
             g->cluster[right] = cluster;
             clust_sz++;
@@ -81,7 +82,7 @@ static void grid_do_dfs(grid *g)
           }
         }
         if (cy > 0) {
-          int top = ((cy - 1) * g->sx) + cx;
+          int top = ((cy - 1) * gsx) + cx;
           if ((g->bond[top] & 2) && g->cluster[top] == 0) {
             g->cluster[top] = cluster;
             clust_sz++;
@@ -89,8 +90,8 @@ static void grid_do_dfs(grid *g)
             stack[sp++] = cy - 1;
           }
         }
-        if (cy < g->sy - 1) {
-          int bottom = ((cy + 1) * g->sx) + cx;
+        if (cy < gsy - 1) {
+          int bottom = ((cy + 1) * gsx) + cx;
           if ((g->bond[node] & 2) && g->cluster[bottom] == 0) {
             g->cluster[bottom] = cluster;
             clust_sz++;
@@ -100,7 +101,7 @@ static void grid_do_dfs(grid *g)
         }
       }
       if (clusters >= g->cluster_cap) {
-        g->cluster_cap += 4 * g->sx;
+        g->cluster_cap += 4 * gsx;
         g->cluster_size = realloc(g->cluster_size, g->cluster_cap * sizeof(int));
       }
       g->cluster_size[clusters++] = clust_sz;
@@ -170,17 +171,6 @@ void bond_percolation(int size, float p, unsigned long seed, percolation_results
   } else {
     seed_grid(g, p, seed);
   }
-  /* printf("\n");
-  for (int y=0; y<size; y++) {
-    for (int x=0; x<size; x++) {
-      printf(".%s", (g.bond[x + (y * size)] & 1) ? "-" : " ");
-    }
-    printf("\n");
-    for (int x=0; x<size; x++) {
-      printf("%s ", (g.bond[x + (y * size)] & 2) ? "|" : " ");
-    }
-    printf("\n");
-  } */
   // Perform DFS
   grid_do_dfs(&g);
   // Merge clusters

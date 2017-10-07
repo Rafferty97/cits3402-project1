@@ -157,19 +157,12 @@ void site_percolation(int size, float p, unsigned long seed, percolation_results
   results->threads = 1;
   // Create grid
   grid g = create_grid(size, size, 1, 1);
-  // Seeg grid
+  // Seed grid
   if (site_grid_buffer != NULL) {
     memcpy(g.site, site_grid_buffer, size * size * sizeof(bool));
   } else {
     seed_grid(g, p, seed);
   }
-  /* printf("\n");
-  for (int y=0; y<size; y++) {
-    for (int x=0; x<size; x++) {
-      printf("%s", g.site[x + (y * size)] ? "X" : " ");
-    }
-    printf("\n");
-  } */
   // Perform DFS
   grid_do_dfs(&g);
   // Merge clusters

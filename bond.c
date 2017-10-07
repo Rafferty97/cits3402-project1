@@ -13,10 +13,12 @@
 
 typedef struct bond_grid grid;
 
+static char *bond_grid_buffer = NULL;
+
 static grid create_grid(int sx, int sy, int c_c, int c_n)
 {
   grid g;
-  g.bond = malloc(sx * sy * sizeof(short));
+  g.bond = malloc(sx * sy * sizeof(char));
   g.cluster = calloc(sx * sy, sizeof(int));
   g.cluster_size = malloc(4 * sx * sizeof(int));
   g.cluster_cap = 4 * sx;
@@ -31,7 +33,7 @@ static void seed_grid(grid g, float p, unsigned long seed)
 {
   unsigned int rand_buffer = seed;
   for (int i = 0; i < g.sx * g.sy; i++) {
-    short j = 0;
+    char j = 0;
     if (((float)rand_r(&rand_buffer) / (float)RAND_MAX) < p) {
       j += 1;
     }
@@ -162,8 +164,12 @@ void bond_percolation(int size, float p, unsigned long seed, percolation_results
   results->threads = 1;
   // Create grid
   grid g = create_grid(size, size, 1, 1);
-  // Seeg grid
-  seed_grid(g, p, seed);
+  // Seed grid
+  if (bond_grid_buffer != NULL) {
+    memcpy(g.bond, bond_grid_buffer, size * size * sizeof(char));
+  } else {
+    seed_grid(g, p, seed);
+  }
   /* printf("\n");
   for (int y=0; y<size; y++) {
     for (int x=0; x<size; x++) {
@@ -212,7 +218,12 @@ void bond_percolation_parallel(int size, float p, unsigned long seed, percolatio
     int i = omp_get_thread_num();
     int hei = (i == threads - 1 ? size - (i * subgrid_h) : subgrid_h);
     grid g = create_grid(size, hei, i + 1, threads);
-    seed_grid(g, p, seed + (i * 1961));
+    if (bond_grid_buffer != NULL) {
+      int offset = i * subgrid_h * size;
+      memcpy(g.bond, bond_grid_buffer + offset, size * hei * sizeof(char));
+    } else {
+      seed_grid(g, p, seed + (i * 1961));
+    }
     grid_do_dfs(&g);
     grids[i] = g;
   }
@@ -234,4 +245,9 @@ void bond_percolation_parallel(int size, float p, unsigned long seed, percolatio
   gettimeofday(&end, NULL);
   float delta = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
   results->time_taken = delta;
+}
+
+void load_bond_grid(char *bonds)
+{
+  bond_grid_buffer = bonds;
 }

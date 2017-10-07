@@ -1,5 +1,6 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include <time.h>
 #include <omp.h>
@@ -8,7 +9,7 @@
 #include "site.h"
 #include "bond.h"
 
-void random_percolation(char type, int size, float p, int iter, int threads, bool l)
+void percolate(char type, int size, void *data, float p, int iter, int threads, bool l)
 {
   unsigned long seed = time(NULL);
   percolation_results results;
@@ -18,6 +19,13 @@ void random_percolation(char type, int size, float p, int iter, int threads, boo
   float total_time = 0, avg_largest_cluster = 0;
   int perc_count = 0, n = 0;
   if (l) printf("Percolating...");
+  if (data != NULL) {
+    if (tolower(type) == 'b') {
+      load_bond_grid(data);
+    } else {
+      load_site_grid(data);
+    }
+  }
   for (int i=0; i<iter; i++) {
     switch (mode) {
       case 0:
@@ -45,9 +53,9 @@ void random_percolation(char type, int size, float p, int iter, int threads, boo
   avg_largest_cluster /= iter;
   if (l) {
     printf(
-      "%s percolation, %i x %i grid, p = %f\n%i iterations, %i thread%s.\n\n",
-      (tolower(type) == 'b' ? "Bond" : "Site"), size, size, p, iter, threads,
-      (threads == 1 ? "" : "s")
+      "%s percolation, %i x %i grid, p = %f\n%i iteration%s, %i thread%s.\n\n",
+      (tolower(type) == 'b' ? "Bond" : "Site"), size, size, p, iter,
+      (iter == 1 ? "" : "s"), threads, (threads == 1 ? "" : "s")
     );
     printf(
       "Total time: %f seconds\nPercolating grids: %i / %i\nAvg. largest cluster size: %f\n\n",
@@ -61,12 +69,106 @@ void random_percolation(char type, int size, float p, int iter, int threads, boo
   }
 }
 
+void interactive_mode()
+{
+  char *line = NULL;
+  size_t linesz = 0;
+  char *delims = " \t\n\r";
+  while (getline(&line, &linesz, stdin) > 0) {
+    char *token = strtok(line, delims);
+    if (!token) break;
+    if (strcmp(token, "h") == 0) {
+      printf("Type\tSize\tp\tIter's\tThreads\tTotal Time\tPerc Count\tAvg. Largest Cluster\n");
+      continue;
+    }
+    if (strcmp(token, "s") && strcmp(token, "b")) {
+      printf("Percolation type must be s (site) or b (bond).\n");
+      exit(EXIT_FAILURE);
+    }
+    char type = token[0];
+    token = strtok(NULL, delims);
+    int size = atoi(token);
+    if (size <= 0) {
+      printf("Lattice size must be a positive integer.\n");
+      exit(EXIT_FAILURE);
+    }
+    token = strtok(NULL, delims);
+    char *buffer = NULL;
+    float p = 0;
+    int threads = 1, iter = 1;
+    if (strcmp(token, "d") == 0) {
+      token = strtok(NULL, delims);
+      if (token) {
+        threads = atoi(token);
+        if (threads == 0) threads = 1;
+      }
+      if (getline(&line, &linesz, stdin) <= 0) {
+        printf("No lattice data provided.\n");
+        exit(EXIT_FAILURE);
+      }
+      buffer = malloc(size * size);
+      char *c = token;
+      for (int i = 0; i < size * size; i++) {
+        if (*c == '\0') break;
+        buffer[i] = *c++ - '0';
+      }
+    } else {
+      p = atof(token);
+      token = strtok(NULL, delims);
+      if (token) {
+        threads = atoi(token);
+        if (threads == 0) threads = 1;
+        token = strtok(NULL, delims);
+        if (token) {
+          iter = atoi(token);
+          if (iter == 0) iter = 1;
+        }
+      }
+    }
+    percolate(type, size, buffer, p, iter, threads, false);
+    free(buffer);
+  }
+}
+
+void man()
+{
+  printf("No manual as of yet.\n\n");
+}
+
 int main(int argc, char *argv[])
 {
-  random_percolation('b', 1024, 0.5, 100, 1, false);
-  random_percolation('b', 1024, 0.5, 100, 2, false);
-  random_percolation('b', 1024, 0.5, 100, 4, false);
-  random_percolation('s', 1024, 0.59, 100, 1, false);
-  random_percolation('s', 1024, 0.59, 100, 2, false);
-  random_percolation('s', 1024, 0.59, 100, 4, false);
+  if (argc == 1) {
+    interactive_mode();
+    return EXIT_SUCCESS;
+  }
+  if (argc == 2) {
+    if (strcmp(argv[1], "man") == 0) {
+      man();
+      return EXIT_SUCCESS;
+    }
+  }
+  if (argc >= 4) {
+    char type = argv[1][0];
+    int size = atoi(argv[2]);
+    float p = atof(argv[3]);
+    int threads = 1;
+    int iter = 1;
+    if (argc >= 5) threads = atoi(argv[4]);
+    if (argc >= 6) iter = atoi(argv[5]);
+    if (argc >= 7) {
+      printf("Wrong number of arguments.\n\n");
+      man();
+      return EXIT_FAILURE;
+    }
+    if (size <= 0 || p < 0 || p > 1 || threads < 1 || iter < 1) {
+      printf("Incorrect arguments supplied.\n\n");
+      man();
+      return EXIT_FAILURE;
+    }
+    percolate(type, size, NULL, p, iter, threads, true);
+    return EXIT_SUCCESS;
+  }
+  printf("Wrong number of arguments.\n\n");
+  man();
+  return EXIT_FAILURE;
 }

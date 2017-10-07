@@ -13,6 +13,8 @@
 
 typedef struct site_grid grid;
 
+static bool *site_grid_buffer = NULL;
+
 static grid create_grid(int sx, int sy, int c_c, int c_n)
 {
   grid g;
@@ -155,7 +157,11 @@ void site_percolation(int size, float p, unsigned long seed, percolation_results
   // Create grid
   grid g = create_grid(size, size, 1, 1);
   // Seeg grid
-  seed_grid(g, p, seed);
+  if (site_grid_buffer != NULL) {
+    memcpy(g.site, site_grid_buffer, size * size * sizeof(bool));
+  } else {
+    seed_grid(g, p, seed);
+  }
   /* printf("\n");
   for (int y=0; y<size; y++) {
     for (int x=0; x<size; x++) {
@@ -200,7 +206,12 @@ void site_percolation_parallel(int size, float p, unsigned long seed, percolatio
     int i = omp_get_thread_num();
     int hei = (i == threads - 1 ? size - (i * subgrid_h) : subgrid_h);
     grid g = create_grid(size, hei, i + 1, threads);
-    seed_grid(g, p, seed + (i * 1961));
+    if (site_grid_buffer != NULL) {
+      int offset = i * subgrid_h * size;
+      memcpy(g.site, site_grid_buffer + offset, size * hei * sizeof(bool));
+    } else {
+      seed_grid(g, p, seed + (i * 1961));
+    }
     grid_do_dfs(&g);
     grids[i] = g;
   }
@@ -222,4 +233,9 @@ void site_percolation_parallel(int size, float p, unsigned long seed, percolatio
   gettimeofday(&end, NULL);
   float delta = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
   results->time_taken = delta;
+}
+
+void load_site_grid(bool *sites)
+{
+  site_grid_buffer = sites;
 }

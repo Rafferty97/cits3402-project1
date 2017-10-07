@@ -20,4 +20,6 @@ void site_percolation(int size, float p, unsigned long seed, percolation_results
 
 void site_percolation_parallel(int size, float p, unsigned long seed, percolation_results *results, int threads);
 
+void load_site_grid(bool *sites);
+
 #endif

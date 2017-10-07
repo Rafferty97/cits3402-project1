@@ -27,11 +27,6 @@ cluster_info create_clusters_from_site_grids(struct site_grid *grids, int num_gr
   return ci;
 }
 
-int hash_key(int key, int slots)
-{
-  return key % slots;
-}
-
 cluster_info create_clusters_from_bond_grids(struct bond_grid *grids, int num_grids)
 {
   cluster_info ci;
@@ -53,6 +48,11 @@ cluster_info create_clusters_from_bond_grids(struct bond_grid *grids, int num_gr
   ci.slots = calloc(slots, sizeof(cluster));
   ci.percolates = false;
   return ci;
+}
+
+int hash_key(int key, int slots)
+{
+  return key % slots;
 }
 
 cluster *get_cluster(cluster_info *ci, int id)

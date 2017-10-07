@@ -75,6 +75,8 @@ void interactive_mode()
   size_t linesz = 0;
   char *delims = " \t\n\r";
   while (getline(&line, &linesz, stdin) > 0) {
+    if (line[0] == '#') continue;
+    if (line[0] == '\n') continue;
     char *token = strtok(line, delims);
     if (!token) break;
     if (strcmp(token, "h") == 0) {
@@ -132,7 +134,10 @@ void interactive_mode()
 
 void man()
 {
-  printf("No manual as of yet.\n\n");
+  printf("Usage:\n");
+  printf("  percolate\n");
+  printf("  percolate man\n");
+  printf("  percolate (s|b) <size> <p> [<threads>] [<iterations>]\n\n");
 }
 
 int main(int argc, char *argv[])

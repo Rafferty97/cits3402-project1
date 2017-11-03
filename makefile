@@ -1,15 +1,15 @@
-percolate: main.o site.o bond.o clusters.o
-	gcc-7 -std=gnu99 -fopenmp -Wall -pedantic -Werror -o percolate \
-	main.o site.o bond.o clusters.o -lm
+percolate: main.o outline.o percolate.o grid.o
+	mpicc -std=gnu99 -Wall -pedantic -Werror -o percolate \
+	main.o outline.o percolate.c grid.o -lm
 	
 main.o: main.c
-	gcc-7 -std=gnu99 -fopenmp -Wall -pedantic -Werror -c main.c
+	mpicc -std=gnu99 -Wall -pedantic -Werror -c main.c
 
-site.o: site.c
-	gcc-7 -std=gnu99 -fopenmp -Wall -pedantic -Werror -c site.c
+percolate.o: percolate.c
+	mpicc -std=gnu99 -Wall -pedantic -Werror -c percolate.c
 
-bond.o: bond.c
-	gcc-7 -std=gnu99 -fopenmp -Wall -pedantic -Werror -c bond.c
+grid.o: grid.c
+	mpicc -std=gnu99 -Wall -pedantic -Werror -c grid.c
 
-clusters.o: clusters.c
-	gcc-7 -std=gnu99 -fopenmp -Wall -pedantic -Werror -c clusters.c
+outline.o: outline.c
+	mpicc -std=gnu99 -Wall -pedantic -Werror -c outline.c

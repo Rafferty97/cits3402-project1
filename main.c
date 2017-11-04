@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
   // Run the percolation and print results
-  outline results = percolate_mpi(type, size, size, p, mpi_size, mpi_rank, 0);
+  outline results = percolate_mpi(type, size, size, p, mpi_size, mpi_rank);
   if (mpi_rank == 0) {
     printf("Done. Largest cluster = %i\n", results.max_cluster);
     // print_outline(stdout, results);

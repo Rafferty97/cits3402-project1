@@ -25,7 +25,7 @@ void free_grid(grid g)
   free(g.cluster_size);
 }
 
-void seed_grid(grid g, float p, unsigned long seed)
+void seed_grid(grid g, float p)
 {
   unsigned int rand_buffer = seed;
   for (int i = 0; i < g.sx * g.sy; i++) {

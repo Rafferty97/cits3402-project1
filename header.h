@@ -6,6 +6,12 @@
 #define TAG_OUTLINE_INFO 1
 #define TAG_OUTLINE_DATA 2
 
+/* Global variables */
+
+int grid_tx;
+int grid_ox;
+int grid_oy;
+
 /* Data structures */
 
 typedef struct {
@@ -38,7 +44,7 @@ grid alloc_grid(char t, int sx, int sy);
 
 void free_grid(grid g);
 
-void seed_grid(grid g, float p, unsigned long seed);
+void seed_grid(grid g, float p);
 
 void print_grid(FILE *f, grid g, bool cluster);
 
@@ -64,4 +70,4 @@ void print_outline(FILE *f, outline o);
 
 /* percolate.c */
 
-outline percolate_mpi(char t, int sx, int sy, float p, int nodes, int rank, int rank_start);
+outline percolate_mpi(char t, int sx, int sy, float p, int nodes, int rank);

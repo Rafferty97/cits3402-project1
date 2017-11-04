@@ -54,6 +54,7 @@ outline recv_outline(int src)
 
 static int find_clust_id(int oc, int *parent, int *c, int *sizes, int *sizes2)
 {
+  if (oc == -1) return -1;
   while ((parent[oc] != 0) && ((parent[oc] & INT_HBIT) == 0)) {
     oc = parent[oc];
   }
@@ -179,7 +180,7 @@ outline outline_from_grid(grid g)
 {
   outline o = alloc_outline(g.sx, g.sy, g.n_cluster);
   o.max_cluster = g.max_cluster;
-  memcpy(o.cluster_size, g.cluster_size, o.n_cluster);
+  memcpy(o.cluster_size, g.cluster_size, o.n_cluster * sizeof(int));
   bool bond;
   for (int x = 0; x < o.sx; x++) {
     int it = x;

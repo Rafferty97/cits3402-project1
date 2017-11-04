@@ -24,7 +24,7 @@ outline percolate(char t, int sx, int sy, float p)
   outline o = outline_from_grid(g);
   // print_outline(f, o);
   // fprintf(f, "\n");
-  fclose(f);
+  // fclose(f);
   return o;
 }
 

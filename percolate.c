@@ -16,8 +16,9 @@ outline percolate(char t, int sx, int sy, float p)
   // fprintf(stdout, "Percolating a %i x %i %c grid at %i, %i.\n", sx, sy, t, grid_ox, grid_oy);
   grid g = alloc_grid(t, sx, sy);
   seed_grid(g, p);
-  // print_grid(f, g, false);
-  // fprintf(f, "\n");
+  // printf("%i, %i:\n", grid_ox, grid_oy);
+  // print_grid(stdout, g, false);
+  // printf("\n");
   grid_do_dfs(&g);
   // print_grid(f, g, true);
   // fprintf(f, "\n");
@@ -74,5 +75,10 @@ outline percolate_mpi(char t, int sx, int sy, float p, int nodes, int rank)
   grid_tx = sx;
   grid_ox = 0;
   grid_oy = 0;
-  return percolate_mpi_rec(t, sx, sy, p, nodes, rank, 0);
+  outline out = percolate_mpi_rec(t, sx, sy, p, nodes, rank, 0);
+  // if (rank == 0) {
+  //   print_outline(stdout, out);
+  // }
+  percolate_outline(&out);
+  return out;
 }

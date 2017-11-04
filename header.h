@@ -36,6 +36,7 @@ typedef struct {
   int *bottom;
   int *right;
   int *buffer;
+  bool percolates;
 } outline;
 
 /* grid.c */
@@ -65,6 +66,8 @@ outline merge_outlines_horiz(outline o1, outline o2);
 outline merge_outlines_vert(outline o1, outline o2);
 
 outline outline_from_grid(grid g);
+
+void percolate_outline(outline *o);
 
 void print_outline(FILE *f, outline o);
 

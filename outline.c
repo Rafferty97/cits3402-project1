@@ -20,6 +20,7 @@ outline alloc_outline(int sx, int sy, int n_cluster)
   o.left = o.buffer + (2 * sx);
   o.right = o.buffer + (2 * sx) + sy;
   o.cluster_size = o.buffer + (2 * sx) + (2 * sy);
+  o.percolates = false;
   return o;
 }
 
@@ -52,9 +53,10 @@ outline recv_outline(int src)
   return o;
 }
 
-static int find_clust_id(int oc, int *parent, int *c, int *sizes, int *sizes2)
+static int find_clust_id(int oc, int os, int *parent, int *c, int *sizes, int *sizes2)
 {
   if (oc == -1) return -1;
+  oc += os;
   while ((parent[oc] != 0) && ((parent[oc] & INT_HBIT) == 0)) {
     oc = parent[oc];
   }
@@ -83,8 +85,9 @@ outline merge_outlines_horiz(outline o1, outline o2)
     int oc1 = o1.right[y];
     if (oc1 == -1) continue;
     while (parent[oc1] != 0) oc1 = parent[oc1];
-    int oc2 = o2.left[y] + c1;
+    int oc2 = o2.left[y];
     if (oc2 == -1) continue;
+    oc2 += c1;
     while (parent[oc2] != 0) oc2 = parent[oc2];
     if (oc1 == oc2) continue;
     parent[oc1] = oc2;
@@ -95,27 +98,28 @@ outline merge_outlines_horiz(outline o1, outline o2)
   int c = 0;
   // Left edge
   for (int y = 0; y < o1.sy; y++) {
-    o3.left[y] = find_clust_id(o1.left[y], parent, &c, sizes, o3.cluster_size);
+    o3.left[y] = find_clust_id(o1.left[y], 0, parent, &c, sizes, o3.cluster_size);
   }
   // Right edge
   for (int y = 0; y < o2.sy; y++) {
-    o3.right[y] = find_clust_id(o2.right[y] + c1, parent, &c, sizes, o3.cluster_size);
+    o3.right[y] = find_clust_id(o2.right[y], c1, parent, &c, sizes, o3.cluster_size);
   }
   // Top edge
   for (int x = 0; x < o1.sx; x++) {
-    o3.top[x] = find_clust_id(o1.top[x], parent, &c, sizes, o3.cluster_size);
+    o3.top[x] = find_clust_id(o1.top[x], 0, parent, &c, sizes, o3.cluster_size);
   }
   for (int x = 0; x < o2.sx; x++) {
-    o3.top[o1.sx + x] = find_clust_id(o2.top[x] + c1, parent, &c, sizes, o3.cluster_size);
+    o3.top[o1.sx + x] = find_clust_id(o2.top[x], c1, parent, &c, sizes, o3.cluster_size);
   }
   // Bottom edge
   for (int x = 0; x < o1.sx; x++) {
-    o3.bottom[x] = find_clust_id(o1.bottom[x], parent, &c, sizes, o3.cluster_size);
+    o3.bottom[x] = find_clust_id(o1.bottom[x], 0, parent, &c, sizes, o3.cluster_size);
   }
   for (int x = 0; x < o2.sx; x++) {
-    o3.bottom[o1.sx + x] = find_clust_id(o2.bottom[x] + c1, parent, &c, sizes, o3.cluster_size);
+    o3.bottom[o1.sx + x] = find_clust_id(o2.bottom[x], c1, parent, &c, sizes, o3.cluster_size);
   }
   free(parent);
+  free(sizes);
   o3.n_cluster = c;
   o3.max_cluster = mc;
   return o3;
@@ -138,8 +142,9 @@ outline merge_outlines_vert(outline o1, outline o2)
     int oc1 = o1.bottom[x];
     if (oc1 == -1) continue;
     while (parent[oc1] != 0) oc1 = parent[oc1];
-    int oc2 = o2.top[x] + c1;
+    int oc2 = o2.top[x];
     if (oc2 == -1) continue;
+    oc2 += c1;
     while (parent[oc2] != 0) oc2 = parent[oc2];
     if (oc1 == oc2) continue;
     parent[oc1] = oc2;
@@ -150,27 +155,28 @@ outline merge_outlines_vert(outline o1, outline o2)
   int c = 0;
   // Left edge
   for (int y = 0; y < o1.sy; y++) {
-    o3.left[y] = find_clust_id(o1.left[y], parent, &c, sizes, o3.cluster_size);
+    o3.left[y] = find_clust_id(o1.left[y], 0, parent, &c, sizes, o3.cluster_size);
   }
   for (int y = 0; y < o2.sy; y++) {
-    o3.left[o1.sy + y] = find_clust_id(o2.left[y] + c1, parent, &c, sizes, o3.cluster_size);
+    o3.left[o1.sy + y] = find_clust_id(o2.left[y], c1, parent, &c, sizes, o3.cluster_size);
   }
   // Right edge
   for (int y = 0; y < o1.sy; y++) {
-    o3.right[y] = find_clust_id(o1.right[y], parent, &c, sizes, o3.cluster_size);
+    o3.right[y] = find_clust_id(o1.right[y], 0, parent, &c, sizes, o3.cluster_size);
   }
   for (int y = 0; y < o2.sy; y++) {
-    o3.right[o1.sy + y] = find_clust_id(o2.right[y] + c1, parent, &c, sizes, o3.cluster_size);
+    o3.right[o1.sy + y] = find_clust_id(o2.right[y], c1, parent, &c, sizes, o3.cluster_size);
   }
   // Top edge
   for (int x = 0; x < o1.sx; x++) {
-    o3.top[x] = find_clust_id(o1.top[x], parent, &c, sizes, o3.cluster_size);
+    o3.top[x] = find_clust_id(o1.top[x], 0, parent, &c, sizes, o3.cluster_size);
   }
   // Bottom edge
   for (int x = 0; x < o2.sx; x++) {
-    o3.bottom[x] = find_clust_id(o2.bottom[x] + c1, parent, &c, sizes, o3.cluster_size);
+    o3.bottom[x] = find_clust_id(o2.bottom[x], c1, parent, &c, sizes, o3.cluster_size);
   }
   free(parent);
+  free(sizes);
   o3.n_cluster = c;
   o3.max_cluster = mc;
   return o3;
@@ -201,6 +207,52 @@ outline outline_from_grid(grid g)
   return o;
 }
 
+void percolate_outline(outline *o)
+{
+  int *parent = calloc(o->n_cluster, sizeof(int));
+  char *ox = malloc(o->n_cluster * sizeof(char));
+  char *oy = malloc(o->n_cluster * sizeof(char));
+  for (int i = 0; i < o->sx + o->sy; i++) {
+    int c1, c2;
+    char nox, noy;
+    if (i < o->sx) {
+      c1 = o->top[i];
+      c2 = o->bottom[i];
+      nox = 0;
+      noy = 1;
+    } else {
+      c1 = o->left[i - o->sx];
+      c2 = o->right[i - o->sx];
+      nox = 1;
+      noy = 0;
+    }
+    if (c1 == -1 || c2 == -1) continue;
+    while (parent[c1] - 1 != -1) {
+      nox += ox[c1]; noy += oy[c1];
+      c1 = parent[c1] - 1;
+    }
+    while (parent[c2] - 1 != -1) {
+      nox -= ox[c2]; noy -= oy[c2];
+      c2 = parent[c2] - 1;
+    }
+    if (c1 == c2) {
+      if (nox != 0 || noy != 0) o->percolates = true;
+    } else {
+      parent[c2] = c1 + 1;
+      ox[c2] = nox;
+      oy[c2] = noy;
+      int clust_sz = o->cluster_size[c1] + o->cluster_size[c2];
+      if (clust_sz > o->max_cluster) {
+        o->max_cluster = clust_sz;
+      }
+      o->cluster_size[c1] = clust_sz;
+    }
+  }
+  free(parent);
+  free(ox);
+  free(oy);
+}
+
 void print_outline(FILE *f, outline o)
 {
   fprintf(f, " ");
@@ -227,6 +279,7 @@ void print_outline(FILE *f, outline o)
     if (o.bottom[x] == -1) fprintf(f, "-"); else fprintf(f, "%i", o.bottom[x]);
   }
   fprintf(f, "\n");
+  free(gap);
 }
 
 void print_outline_consistent(FILE *f, outline o)
@@ -257,4 +310,5 @@ void print_outline_consistent(FILE *f, outline o)
     if (o.bottom[x] == -1) fprintf(f, "-"); else fprintf(f, "%i", o.bottom[x]);
   }
   fprintf(f, "\n");
+  free(gap);
 }

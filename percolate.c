@@ -5,8 +5,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <mpi.h>
+#include <sys/time.h>
 
-outline null_outline;
+struct timeval time_start, time_now;
 
 outline percolate(char t, int sx, int sy, float p)
 {
@@ -16,13 +17,19 @@ outline percolate(char t, int sx, int sy, float p)
   // fprintf(stdout, "Percolating a %i x %i %c grid at %i, %i.\n", sx, sy, t, grid_ox, grid_oy);
   grid g = alloc_grid(t, sx, sy);
   seed_grid(g, p);
+  gettimeofday(&time_now, NULL);
+  printf("%i seeded: %li\n", mpi_rank, 1000000 * (time_now.tv_sec - time_start.tv_sec) + (time_now.tv_usec - time_start.tv_usec));
   // printf("%i, %i:\n", grid_ox, grid_oy);
   // print_grid(stdout, g, false);
   // printf("\n");
   grid_do_dfs(&g);
+  gettimeofday(&time_now, NULL);
+  printf("%i DFS done: %li\n", mpi_rank, 1000000 * (time_now.tv_sec - time_start.tv_sec) + (time_now.tv_usec - time_start.tv_usec));
   // print_grid(f, g, true);
   // fprintf(f, "\n");
   outline o = outline_from_grid(g);
+  gettimeofday(&time_now, NULL);
+  printf("%i outlined: %li\n", mpi_rank, 1000000 * (time_now.tv_sec - time_start.tv_sec) + (time_now.tv_usec - time_start.tv_usec));
   // print_outline(f, o);
   // fprintf(f, "\n");
   // fclose(f);
@@ -46,6 +53,8 @@ outline percolate_mpi_rec(char t, int sx, int sy, float p, int nodes, int rank, 
       outline l = percolate_mpi_rec(t, sx_l, sy_l, p, nodes_l, rank, rank_start);
       if (rank != 0) return l;
       outline r = recv_outline(rank_start + nodes_l);
+      gettimeofday(&time_now, NULL);
+      printf("%i recv'd: %li\n", mpi_rank, 1000000 * (time_now.tv_sec - time_start.tv_sec) + (time_now.tv_usec - time_start.tv_usec));
       // printf("Recieved grid %ix%i from %i to %i\n", r.sx, r.sy, rank_start + nodes_l, rank_start);
       if (horiz) {
         return merge_outlines_horiz(l, r);
@@ -62,6 +71,8 @@ outline percolate_mpi_rec(char t, int sx, int sy, float p, int nodes, int rank, 
       if (rank == 0) {
         // printf("Sending grid %ix%i from %i to %i\n", r.sx, r.sy, rank_start, rank_start - nodes_l);
         send_outline(r, rank_start - nodes_l);
+        gettimeofday(&time_now, NULL);
+        printf("%i sent: %li\n", mpi_rank, 1000000 * (time_now.tv_sec - time_start.tv_sec) + (time_now.tv_usec - time_start.tv_usec));
       }
       return r;
     }
@@ -72,13 +83,18 @@ outline percolate_mpi_rec(char t, int sx, int sy, float p, int nodes, int rank, 
 
 outline percolate_mpi(char t, int sx, int sy, float p, int nodes, int rank)
 {
+  gettimeofday(&time_start, NULL);
+  printf("%i start: %li %i\n", mpi_rank, time_start.tv_sec, time_start.tv_usec);
   grid_tx = sx;
   grid_ox = 0;
   grid_oy = 0;
   outline out = percolate_mpi_rec(t, sx, sy, p, nodes, rank, 0);
-  // if (rank == 0) {
-  //   print_outline(stdout, out);
-  // }
-  percolate_outline(&out);
+  if (rank == 0) {
+    gettimeofday(&time_now, NULL);
+    printf("%i recv'd: %li\n", mpi_rank, 1000000 * (time_now.tv_sec - time_start.tv_sec) + (time_now.tv_usec - time_start.tv_usec));
+    percolate_outline(&out);
+    gettimeofday(&time_now, NULL);
+    printf("%i done: %li\n", mpi_rank, 1000000 * (time_now.tv_sec - time_start.tv_sec) + (time_now.tv_usec - time_start.tv_usec));
+  }
   return out;
 }

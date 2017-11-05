@@ -8,6 +8,8 @@
 
 /* Global variables */
 
+int mpi_rank;
+int mpi_size;
 int grid_tx;
 int grid_ox;
 int grid_oy;

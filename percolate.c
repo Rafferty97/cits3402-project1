@@ -51,12 +51,14 @@ outline percolate_mpi_rec(char t, int sx, int sy, float p, int nodes, int rank, 
       if (rank != 0) return l;
       outline r = recv_outline(rank_start + nodes_l);
       lap();
+      outline comb;
       if (horiz) {
-        return merge_outlines_horiz(l, r);
+        comb = merge_outlines_horiz(l, r);
       } else {
-        return merge_outlines_vert(l, r);
+        comb = merge_outlines_vert(l, r);
       }
       t_stitch += lap();
+      return comb;
     } else {
       rank -= nodes_l;
       rank_start += nodes_l;

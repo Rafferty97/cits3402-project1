@@ -29,9 +29,7 @@ void free_grid(grid g)
 
 void seed_grid(grid g, float p)
 {
-  int d = (g.t == 'b' ? 2 : 1);
-  unsigned int rand_buffer = SEED;
-  for (int i = 0; i < d * (grid_ox + (grid_oy * grid_tx)); i++) rand_r(&rand_buffer);
+  unsigned int rand_buffer = SEED + (123 * mpi_rank);
   for (int i = 0; i < g.sx * g.sy; i++) {
     char j = 0;
     if (((float)rand_r(&rand_buffer) / (float)RAND_MAX) < p) {
@@ -43,9 +41,6 @@ void seed_grid(grid g, float p)
       }
     }
     g.grid[i] = j;
-    if ((i + 1) % g.sx == 0) {
-      for (int j = 0; j < d * (grid_tx - g.sx); j++) rand_r(&rand_buffer);
-    }
   }
 }
 

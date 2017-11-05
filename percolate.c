@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <mpi.h>
 #include <sys/time.h>
+#include <inttypes.h>
 
 struct timeval time_start, time_now;
 
@@ -84,7 +85,7 @@ outline percolate_mpi_rec(char t, int sx, int sy, float p, int nodes, int rank, 
 outline percolate_mpi(char t, int sx, int sy, float p, int nodes, int rank)
 {
   gettimeofday(&time_start, NULL);
-  printf("%i start: %li %i\n", mpi_rank, time_start.tv_sec, time_start.tv_usec);
+  printf("%i start: %ju %ju\n", mpi_rank, (uintmax_t)time_start.tv_sec, (uintmax_t)time_start.tv_usec);
   grid_tx = sx;
   grid_ox = 0;
   grid_oy = 0;

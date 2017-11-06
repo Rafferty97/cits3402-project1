@@ -44,7 +44,6 @@ int main(int argc, char *argv[])
     printf("Percolating with %i nodes.\n", mpi_size);
   }
   outline results = percolate_mpi(type, size, size, p, mpi_size, mpi_rank);
-  MPI_Barrier(MPI_COMM_WORLD);
   if (mpi_rank == 0) {
     end = MPI_Wtime();
     printf(

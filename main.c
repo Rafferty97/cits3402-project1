@@ -14,8 +14,11 @@ void man()
 
 int main(int argc, char *argv[])
 {
+  double start, end;
   // Initialise MPI
   MPI_Init(&argc, &argv);
+  MPI_Barrier(MPI_COMM_WORLD);
+  start = MPI_Wtime();
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
   // Parse command line arguments
@@ -41,9 +44,15 @@ int main(int argc, char *argv[])
     printf("Percolating with %i nodes.\n", mpi_size);
   }
   outline results = percolate_mpi(type, size, size, p, mpi_size, mpi_rank);
+  MPI_Barrier(MPI_COMM_WORLD);
   if (mpi_rank == 0) {
-    printf("Done.\nLargest cluster = %i.\nPercolates = %s.\n", results.max_cluster, results.percolates ? "YES" : "NO");
-    // print_outline(stdout, results);
+    end = MPI_Wtime();
+    printf(
+      "Done.\nLargest cluster = %i.\nPercolates = %s.\nTotal time = %.6f",
+      results.max_cluster,
+      results.percolates ? "YES" : "NO",
+      end - start
+    );
   }
   MPI_Finalize();
   return EXIT_SUCCESS;

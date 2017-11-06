@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
   if (mpi_rank == 0) {
     end = MPI_Wtime();
     printf(
-      "Done.\nLargest cluster = %i.\nPercolates = %s.\nTotal time = %.6f",
+      "Done.\nLargest cluster = %i.\nPercolates = %s.\nTotal time = %.6f\n",
       results.max_cluster,
       results.percolates ? "YES" : "NO",
       end - start

@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-
-#define SEED 1000
+#include <time.h>
 
 grid alloc_grid(char t, int sx, int sy)
 {
@@ -29,7 +28,7 @@ void free_grid(grid g)
 
 void seed_grid(grid g, float p)
 {
-  unsigned int rand_buffer = SEED + (123 * mpi_rank);
+  unsigned int rand_buffer = time(NULL) + (123 * mpi_rank);
   for (int i = 0; i < g.sx * g.sy; i++) {
     char j = 0;
     if (((float)rand_r(&rand_buffer) / (float)RAND_MAX) < p) {

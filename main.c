@@ -14,11 +14,11 @@ void man()
 
 int main(int argc, char *argv[])
 {
-  double start, end;
+  double total, start, end, lap;
+  total = 0;
+  lap = 0;
   // Initialise MPI
   MPI_Init(&argc, &argv);
-  MPI_Barrier(MPI_COMM_WORLD);
-  start = MPI_Wtime();
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
   // Parse command line arguments
@@ -42,16 +42,24 @@ int main(int argc, char *argv[])
   // Run the percolation and print results
   if (mpi_rank == 0) {
     printf("Percolating with %i nodes.\n", mpi_size);
+    printf("Percolating... 0 / %i iterations.", iter);
+    fflush(stdout);
   }
-  outline results = percolate_mpi(type, size, size, p, mpi_size, mpi_rank);
-  if (mpi_rank == 0) {
+  for (int i = 0; i < iter; i++) {
+    MPI_Barrier(MPI_COMM_WORLD);
+    start = MPI_Wtime();
+    percolate_mpi(type, size, size, p, mpi_size, mpi_rank);
     end = MPI_Wtime();
-    printf(
-      "Done.\nLargest cluster = %i.\nPercolates = %s.\nTotal time = %.6f\n",
-      results.max_cluster,
-      results.percolates ? "YES" : "NO",
-      end - start
-    );
+    total += end - start;
+    lap -= end - start;
+    if (lap < 0) {
+      lap = 0.2;
+      printf("\33[2K\rPercolating... %i / %i iterations.", i + 1, iter);
+      fflush(stdout);
+    }
+  }
+  if (mpi_rank == 0) {
+    printf("\nParameters: %c %i %f\nIterations: %i\nTotal time: %f\n\n", type, size, p, iter, total);
   }
   MPI_Finalize();
   return EXIT_SUCCESS;

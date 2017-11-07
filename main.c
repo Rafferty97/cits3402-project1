@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     end = MPI_Wtime();
     total += end - start;
     lap -= end - start;
-    if (lap < 0) {
+    if (lap < 0 || i == iter - 1) {
       lap = 0.2;
       printf("\33[2K\rPercolating... %i / %i iterations.", i + 1, iter);
       fflush(stdout);
